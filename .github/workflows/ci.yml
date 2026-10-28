@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  pipeline-and-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Generate synthetic sample data
+        run: python scripts/generate_sample_data.py
+
+      - name: Run pipeline with reproducibility check
+        run: python -m scripts.run_pipeline --as-of 2026-09-30 --verify-reproducible
+
+      - name: Run data-quality, AI-boundary, and governance tests
+        run: python -m pytest warehouse/tests ai/eval -v
+
+      - name: Run AI model accuracy gate (demo scale)
+        run: python -m ai.eval.run_gate --threshold 0.7

@@ -1,0 +1,12 @@
+{"note_id": "n001", "text": "Found flashover on insulator at pole 4, replaced unit.", "expected_failure_type": "insulator_failure"}
+{"note_id": "n002", "text": "Tree limb down across primary conductor after wind event.", "expected_failure_type": "tree_contact"}
+{"note_id": "n003", "text": "Squirrel contact on transformer bushing, minor outage.", "expected_failure_type": "animal_contact"}
+{"note_id": "n004", "text": "Lightning strike on lateral, fuse blown.", "expected_failure_type": "weather_related"}
+{"note_id": "n005", "text": "Corroded connector at old transformer, visible rust on terminals.", "expected_failure_type": "equipment_age"}
+{"note_id": "n006", "text": "Porcelain insulator cracked, flashover observed during storm.", "expected_failure_type": "insulator_failure"}
+{"note_id": "n007", "text": "Branch contact with secondary line following high wind.", "expected_failure_type": "tree_contact"}
+{"note_id": "n008", "text": "Bird nest caused contact on recloser arm.", "expected_failure_type": "animal_contact"}
+{"note_id": "n009", "text": "Ice buildup caused line sag and contact with neutral.", "expected_failure_type": "weather_related"}
+{"note_id": "n010", "text": "Worn contact points on aged breaker, replaced during routine check.", "expected_failure_type": "equipment_age"}
+{"note_id": "n011", "text": "Crew found no clear cause, equipment reset itself on inspection.", "expected_failure_type": "unknown"}
+{"note_id": "n012", "text": "Snake found in cabinet, caused phase to ground fault.", "expected_failure_type": "animal_contact"}

@@ -1,0 +1,95 @@
+# Every copy of customer-related data, per the deck's register (deepest-review item).
+# This file is read by warehouse/tests/test_c7_isolation.py and
+# scripts/build_evidence_pack.py — it is not documentation-only, it is enforced.
+
+copies:
+  - id: C1
+    name: raw_reads
+    store: s3
+    holds: "15-minute meter reads, keyed by pseudonymous meter ID"
+    contains_direct_pii: false
+    contains_sensitive_inference: true   # presence/absence at home is inferable (LEG-01)
+    retention: 13 months
+    controls:
+      - own_kms_key
+      - no_standing_analyst_access
+      - break_glass_only
+    access_requires_business_justification: true
+
+  - id: C2
+    name: raw_inputs
+    store: s3
+    holds: "Outages, assets, GIS map, customer counts, weather. No names."
+    contains_direct_pii: false
+    contains_sensitive_inference: false
+    retention: 7 years
+    controls:
+      - object_lock
+      - pipeline_role_only
+
+  - id: C3
+    name: raw_notes
+    store: s3
+    holds: "Crew notes — may contain names, phone numbers"
+    contains_direct_pii: true
+    contains_sensitive_inference: false
+    retention: 30 days
+    controls:
+      - own_kms_key
+      - auto_delete_after_retention
+      - redacted_before_any_downstream_use
+
+  - id: C4
+    name: warehouse
+    store: redshift
+    holds: "Meter events, outage history, metrics, redacted notes, AI-derived fields"
+    contains_direct_pii: false
+    contains_sensitive_inference: true
+    retention: "7 years regulatory tables, 3 years operational tables"
+    controls:
+      - row_level_security
+      - masking_by_default
+      - aggregation_floor_15_customers   # LEG-01 — flagged unvalidated, see governance/open_items.md
+
+  - id: C5
+    name: filing_vault
+    store: s3
+    holds: "Frozen filing snapshots and evidence packs"
+    contains_direct_pii: false
+    contains_sensitive_inference: false
+    retention: "7 years, replicated to second US region"
+    controls:
+      - object_lock_compliance_mode
+      - us_region_only   # LEG-03
+
+  - id: C6
+    name: backups_and_logs
+    store: mixed
+    holds: "Snapshots, versions, access logs without content"
+    contains_direct_pii: false
+    contains_sensitive_inference: false
+    retention: "as source; access logs 1 year"
+    controls:
+      - same_keys_and_access_as_source
+
+  - id: C7
+    name: medical_life_support_flag
+    store: customer_system_only   # NEVER lands in S3 or Redshift — see note below
+    holds: "Boolean flag only, keyed to service address"
+    contains_direct_pii: true
+    contains_sensitive_inference: true
+    sensitivity: highest   # explicitly called out as "especially sensitive" in the brief
+    retention: "lives and dies with the source customer system; this platform stores nothing"
+    controls:
+      - never_joined_to_name_meter_id_or_analytics_tables
+      - never_replicated_into_s3_or_redshift
+      - read_only_via_logged_direct_api_call_from_outage_dispatch_workflow
+    access_requires_business_justification: true
+    note: >
+      This is the one data element in the register that is NOT copied into the
+      platform at all. Outage dispatch reads it live, per-incident, directly from
+      the customer system via an audited API call. No batch extract, no cache,
+      no join key anywhere in C1-C6 resolves to this flag. Any PR that adds a
+      column, view, or join path touching this ID should fail review on sight;
+      warehouse/tests/test_c7_isolation.py enforces this mechanically for the
+      warehouse models in this repo.
